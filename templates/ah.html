@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ah</title>
+    {% load static %}
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@700&display=swap");
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #fff;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            padding: 0.4rem 0.9rem;
+            border: 2px solid #000;
+            border-radius: 999px;
+            color: #000;
+            font-family: "Noto Sans Kannada", "Noto Sans", sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .back-link:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .glide-wrapper {
+            opacity: 0;
+            transform: translateX(-120vw);
+            pointer-events: none;
+        }
+
+        .glide-wrapper.is-active {
+            opacity: 1;
+            animation: glide-in 3s ease-out forwards;
+            pointer-events: auto;
+        }
+
+        .start-button {
+            padding: 0.75rem 1.6rem;
+            border: 2px solid #000;
+            border-radius: 999px;
+            background: #fff;
+            color: #000;
+            font-family: "Noto Sans Kannada", "Noto Sans", sans-serif;
+            font-size: 0.95rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .start-button:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .roll-button {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: #000;
+            font-family: "Noto Sans Kannada", "Noto Sans", sans-serif;
+            font-size: clamp(5rem, 18vw, 9rem);
+            line-height: 1;
+            letter-spacing: 0;
+            cursor: pointer;
+            transform: scale(1);
+            transition: color 0.2s ease, transform 0.12s ease;
+        }
+
+        .roll-button:hover {
+            color: #444;
+        }
+
+        .roll-button.is-pressed {
+            color: #ff1a1a;
+            transform: translateX(0) scale(1.18);
+            transition: transform 0.12s ease, color 0.12s ease;
+        }
+
+        @keyframes glide-in {
+            0% {
+                transform: translateX(-120vw);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .glide-wrapper.is-active {
+                animation: none;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a class="back-link" href="{% url 'home' %}">Back</a>
+    <button class="start-button" id="startButton" type="button">Start</button>
+    <div class="glide-wrapper" id="glideWrapper" aria-hidden="true">
+        <button class="roll-button" id="rollButton" type="button">ಅ</button>
+    </div>
+    <audio id="clickSound" src="{% static 'translate_tts.mp3' %}" preload="auto"></audio>
+    <script>
+        const rollButton = document.getElementById("rollButton");
+        const clickSound = document.getElementById("clickSound");
+        const startButton = document.getElementById("startButton");
+        const glideWrapper = document.getElementById("glideWrapper");
+
+        startButton.addEventListener("click", () => {
+            startButton.style.display = "none";
+            glideWrapper.classList.add("is-active");
+            glideWrapper.setAttribute("aria-hidden", "false");
+        });
+
+        rollButton.addEventListener("click", () => {
+            if (!clickSound) {
+                return;
+            }
+            clickSound.currentTime = 0;
+            clickSound.play().catch(() => {
+                // Autoplay policies can block sound until user interaction.
+            });
+
+            rollButton.classList.add("is-pressed");
+        });
+
+        if (clickSound) {
+            clickSound.addEventListener("ended", () => {
+                rollButton.classList.remove("is-pressed");
+            });
+
+            clickSound.addEventListener("pause", () => {
+                if (clickSound.currentTime === 0 || clickSound.ended) {
+                    rollButton.classList.remove("is-pressed");
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
