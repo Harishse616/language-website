@@ -6,11 +6,12 @@
             "use": "@vercel/python"
         }
     ],
+    "functions": {
+        "api/index.py": {
+            "includeFiles": "staticfiles/**"
+        }
+    },
     "routes": [
-        {
-            "src": "/static/(.*)",
-            "dest": "/staticfiles/$1"
-        },
         {
             "src": "/(.*)",
             "dest": "api/index.py"
