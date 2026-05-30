@@ -54,6 +54,17 @@
             pointer-events: auto;
         }
 
+        .word-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .word-line.is-speaking .roll-button,
+        .word-line.is-speaking .word-suffix {
+            color: #ff1a1a;
+        }
+
         .start-button {
             padding: 0.75rem 1.6rem;
             border: 2px solid #000;
@@ -97,6 +108,22 @@
             transition: transform 0.12s ease, color 0.12s ease;
         }
 
+        .word-suffix {
+            font-family: "Noto Sans Kannada", "Noto Sans", sans-serif;
+            font-size: clamp(5rem, 18vw, 9rem);
+            line-height: 1;
+            color: #000;
+            opacity: 0;
+            margin-left: -0.2em;
+            transform: translateX(-0.4em);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .word-suffix.is-visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
         @keyframes glide-in {
             0% {
                 transform: translateX(-120vw);
@@ -120,14 +147,22 @@
     <a class="back-link" href="{% url 'home' %}">Back</a>
     <button class="start-button" id="startButton" type="button">Start</button>
     <div class="glide-wrapper" id="glideWrapper" aria-hidden="true">
-        <button class="roll-button" id="rollButton" type="button">ಅ</button>
+        <div class="word-line" id="wordLine" aria-live="polite">
+            <button class="roll-button" id="rollButton" type="button">ಅ</button>
+            <span class="word-suffix" id="wordSuffix">ರಸ</span>
+        </div>
     </div>
     <audio id="clickSound" src="{% static 'translate_tts.mp3' %}" preload="auto"></audio>
+    <audio id="wordSound" src="{% static 'translate_tts (1).mp3' %}" preload="auto"></audio>
     <script>
         const rollButton = document.getElementById("rollButton");
         const clickSound = document.getElementById("clickSound");
+        const wordSound = document.getElementById("wordSound");
         const startButton = document.getElementById("startButton");
         const glideWrapper = document.getElementById("glideWrapper");
+        const wordSuffix = document.getElementById("wordSuffix");
+        const wordLine = document.getElementById("wordLine");
+        let suffixTimer = null;
 
         startButton.addEventListener("click", () => {
             startButton.style.display = "none";
@@ -138,6 +173,17 @@
         rollButton.addEventListener("click", () => {
             if (!clickSound) {
                 return;
+            }
+            if (suffixTimer) {
+                window.clearTimeout(suffixTimer);
+                suffixTimer = null;
+            }
+            if (wordSound) {
+                wordSound.pause();
+                wordSound.currentTime = 0;
+            }
+            if (wordLine) {
+                wordLine.classList.remove("is-speaking");
             }
             clickSound.currentTime = 0;
             clickSound.play().catch(() => {
@@ -150,11 +196,41 @@
         if (clickSound) {
             clickSound.addEventListener("ended", () => {
                 rollButton.classList.remove("is-pressed");
+                if (wordSuffix) {
+                    suffixTimer = window.setTimeout(() => {
+                        wordSuffix.classList.add("is-visible");
+                        if (wordSound) {
+                            if (wordLine) {
+                                wordLine.classList.add("is-speaking");
+                            }
+                            wordSound.currentTime = 0;
+                            wordSound.play().catch(() => {
+                                // Autoplay policies can block sound until user interaction.
+                            });
+                        }
+                    }, 1000);
+                }
             });
 
             clickSound.addEventListener("pause", () => {
                 if (clickSound.currentTime === 0 || clickSound.ended) {
                     rollButton.classList.remove("is-pressed");
+                }
+            });
+        }
+
+        if (wordSound) {
+            wordSound.addEventListener("ended", () => {
+                if (wordLine) {
+                    wordLine.classList.remove("is-speaking");
+                }
+            });
+
+            wordSound.addEventListener("pause", () => {
+                if (wordSound.currentTime === 0 || wordSound.ended) {
+                    if (wordLine) {
+                        wordLine.classList.remove("is-speaking");
+                    }
                 }
             });
         }
